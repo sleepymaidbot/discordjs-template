@@ -1,4 +1,4 @@
-import { Config } from "../lib/util/config";
+import { Config } from '../lib/util/config'
 
 export const config = new Config({
 	credentials: {
@@ -8,6 +8,5 @@ export const config = new Config({
 	environment: 'development',
 	owners: ['324281236728053760'],
 	prefix: '-',
-	devprefix: 'dev.',
+	devprefix: 'dev.'
 })
-

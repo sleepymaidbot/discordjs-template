@@ -4,8 +4,8 @@
 	"description": "A template for my future discord bot with slash command handling integrated",
 	"main": "src/index.ts",
 	"author": "Ecorte",
-  "license": "MIT",
-  "scripts": {
+	"license": "MIT",
+	"scripts": {
 		"test": "yarn run lint && yarn run build",
 		"build": "yarn rimraf dist/ && yarn tsc",
 		"lint": "yarn eslint --fix --ext js,jsx,ts,tsx src",

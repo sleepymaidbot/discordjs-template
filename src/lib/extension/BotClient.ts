@@ -1,60 +1,63 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ApplicationCommandData, Client, ClientOptions } from 'discord.js';
-import { Logger } from '../logger/logger';
-import type { botClientCommandsType, BotClientOptions, guildCommandsType } from '../../types';
-import fs from 'fs';
-import path from 'path';
-import Util from '../util/util';
-import { config } from '../../config/config';
+import { ApplicationCommandData, Client, ClientOptions } from 'discord.js'
+import { Logger } from '../logger/logger'
+import type {
+	botClientCommandsType,
+	BotClientOptions,
+	guildCommandsType
+} from '../../types'
+import fs from 'fs'
+import path from 'path'
+import Util from '../util/util'
+import { config } from '../../config/config'
 
 export default class BotClient extends Client {
-    public declare botName: string
-    public declare logger: Logger
-    public declare commandFolder: string
-    public declare commands: botClientCommandsType
-    public declare eventsFolder: string
-    public declare taskFolder: string
-    constructor(djsOptions: ClientOptions, options: BotClientOptions) {
-        super(djsOptions)
+	public declare botName: string
+	public declare logger: Logger
+	public declare commandFolder: string
+	public declare commands: botClientCommandsType
+	public declare eventsFolder: string
+	public declare taskFolder: string
+	constructor(djsOptions: ClientOptions, options: BotClientOptions) {
+		super(djsOptions)
 
-        const {
-            botName,
-            commandFolder,
-            eventsFolder,
-            taskFolder
-        } = options ?? {}
+		const { botName, commandFolder, eventsFolder, taskFolder } = options ?? {}
 
-        this.botName = botName ?? 'Bot'
-        this.logger = new Logger(this.botName)
-        this.commandFolder = commandFolder ?? '../../commands'
-        this.commands = {}
-        this.eventsFolder = eventsFolder ?? '../../listeners'
-        this.taskFolder = taskFolder ?? '../../tasks'
-    }
+		this.botName = botName ?? 'Bot'
+		this.logger = new Logger(this.botName)
+		this.commandFolder = commandFolder ?? '../../commands'
+		this.commands = {}
+		this.eventsFolder = eventsFolder ?? '../../listeners'
+		this.taskFolder = taskFolder ?? '../../tasks'
+	}
 
-    public async startAll(): Promise<void> {
-        this.login(config.token)
-        this.loadEvents()
-        this.on('ready', () => {
-            this.registerApplicationCommands()
-            this.loadTask()
-        })
-        this.on("interactionCreate", (i) => {
-            if (!i.isCommand()) return
-            this.handleApplicationCommands(i)
-        })
-    }
+	public async startAll(): Promise<void> {
+		this.login(config.token)
+		this.loadEvents()
+		this.on('ready', () => {
+			this.registerApplicationCommands()
+			this.loadTask()
+		})
+		this.on('interactionCreate', (i) => {
+			if (!i.isCommand()) return
+			this.handleApplicationCommands(i)
+		})
+	}
 
-    protected async registerApplicationCommands(): Promise<void> {
-        this.logger.info('Registering application commands...')
+	protected async registerApplicationCommands(): Promise<void> {
+		this.logger.info('Registering application commands...')
 
-        const slashCommandFiles = fs.readdirSync(path.resolve(__dirname, this.commandFolder))
+		const slashCommandFiles = fs.readdirSync(
+			path.resolve(__dirname, this.commandFolder)
+		)
 
 		const filesToImport = []
 
 		async function importFolder(folder) {
-            const fsfolder = fs.readdirSync(`${__dirname}/${this.commandFolder}/${folder}`)
+			const fsfolder = fs.readdirSync(
+				`${__dirname}/${this.commandFolder}/${folder}`
+			)
 			for (const file of fsfolder) {
 				if (file.endsWith('.js')) {
 					filesToImport.push(`${folder}/${file}`)
@@ -73,16 +76,16 @@ export default class BotClient extends Client {
 			}
 		}
 
-        const globalsCommands: ApplicationCommandData[] = []
+		const globalsCommands: ApplicationCommandData[] = []
 		const guildCommands: guildCommandsType = {}
 
 		for (const file of filesToImport) {
 			await import(`${this.commandFolder}/${file}`).then((cmds) => {
-                this.commands[cmds.data.name] = `../../slashCommands/${file}`
+				this.commands[cmds.data.name] = `../../slashCommands/${file}`
 				if (cmds.guildIds) {
 					if (cmds.guildIds.lenght === 1) {
 						const guildId = cmds.guildIDs[0]
-                        if (guildCommands[guildId]) {
+						if (guildCommands[guildId]) {
 							guildCommands[guildId].push(cmds.data)
 						} else {
 							guildCommands[guildId] = [cmds.data]
@@ -102,23 +105,24 @@ export default class BotClient extends Client {
 			})
 		}
 
-        // Global commands
-        const applicationCommand = globalsCommands.map((cmd) => ({
-            name: cmd.name,
-            // @ts-ignore - This is a workaround for a bug in the builder
-            description: cmd.description,
-            // @ts-ignore - This is a workaround for a bug in the builder
-            options: cmd.options,
-            defaultPermission: cmd.defaultPermission,
-            type: cmd.type
-        }))
-        .sort((a, b) => {
-            if (a.name < b.name) return -1;
-            if (a.name > b.name) return 1;
-            return 0;
-        }) as ApplicationCommandData[];
-        const currentGlobalCommands = (await this.application?.commands.fetch())!
-			.map(value1 => ({
+		// Global commands
+		const applicationCommand = globalsCommands
+			.map((cmd) => ({
+				name: cmd.name,
+				// @ts-ignore - This is a workaround for a bug in the builder
+				description: cmd.description,
+				// @ts-ignore - This is a workaround for a bug in the builder
+				options: cmd.options,
+				defaultPermission: cmd.defaultPermission,
+				type: cmd.type
+			}))
+			.sort((a, b) => {
+				if (a.name < b.name) return -1
+				if (a.name > b.name) return 1
+				return 0
+			}) as ApplicationCommandData[]
+		const currentGlobalCommands = (await this.application?.commands.fetch())!
+			.map((value1) => ({
 				name: value1.name,
 				description: value1.description,
 				options: value1.options,
@@ -126,99 +130,108 @@ export default class BotClient extends Client {
 				type: value1.type
 			}))
 			.sort((a, b) => {
-				if (a.name < b.name) return -1;
-				if (a.name > b.name) return 1;
-				return 0;
-			}) as ApplicationCommandData[];
+				if (a.name < b.name) return -1
+				if (a.name > b.name) return 1
+				return 0
+			}) as ApplicationCommandData[]
 
-        //if (currentGlobalCommands !== applicationCommand) {
-        if (Util.deepEquals(currentGlobalCommands, applicationCommand) == false) {
-            this.logger.info('Global commands have changed, updating...')
-            await this.application?.commands.set(globalsCommands).catch((e) => this.logger.error(e))
-        } else {
-            this.logger.info('Global commands have not changed.')
-        }
+		//if (currentGlobalCommands !== applicationCommand) {
+		if (Util.deepEquals(currentGlobalCommands, applicationCommand) == false) {
+			this.logger.info('Global commands have changed, updating...')
+			await this.application?.commands
+				.set(globalsCommands)
+				.catch((e) => this.logger.error(e))
+		} else {
+			this.logger.info('Global commands have not changed.')
+		}
 
-        // Guild commands
-        if (guildCommands) {
-            for (const [key, value] of Object.entries(guildCommands)) {
-                const guild = this.guilds.cache.get(key)
-                if (!guild) return
+		// Guild commands
+		if (guildCommands) {
+			for (const [key, value] of Object.entries(guildCommands)) {
+				const guild = this.guilds.cache.get(key)
+				if (!guild) return
 
-                const sortedCommands = value
-                .map((cmd) => ({
-                    name: cmd.name,
-                    // @ts-ignore - This is a workaround for a bug in the builder
-                    description: cmd.description,
-                    // @ts-ignore - This is a workaround for a bug in the builder
-                    options: cmd.options,
-                    defaultPermission: cmd.defaultPermission,
-                    type: cmd.type
-                }))
-                .sort((a, b) => {
-                    if (a.name < b.name) return -1
-                    if (a.name > b.name) return 1
-                    return 0
-                })
+				const sortedCommands = value
+					.map((cmd) => ({
+						name: cmd.name,
+						// @ts-ignore - This is a workaround for a bug in the builder
+						description: cmd.description,
+						// @ts-ignore - This is a workaround for a bug in the builder
+						options: cmd.options,
+						defaultPermission: cmd.defaultPermission,
+						type: cmd.type
+					}))
+					.sort((a, b) => {
+						if (a.name < b.name) return -1
+						if (a.name > b.name) return 1
+						return 0
+					})
 
-                const currentGuildCommands = (await guild.commands.fetch())
-                    .map(v1 => ({
-                        name: v1.name,
-                        description: v1.description,
-                        options: v1.options,
-                        defaultPermission: v1.defaultPermission,
-                        type: v1.type
-                    })).sort((a, b) => {
-                        if (a.name < b.name) return -1
-                        if (a.name > b.name) return 1
-                        return 0
-                    })
+				const currentGuildCommands = (await guild.commands.fetch())
+					.map((v1) => ({
+						name: v1.name,
+						description: v1.description,
+						options: v1.options,
+						defaultPermission: v1.defaultPermission,
+						type: v1.type
+					}))
+					.sort((a, b) => {
+						if (a.name < b.name) return -1
+						if (a.name > b.name) return 1
+						return 0
+					})
 
-                if (Util.deepEquals(sortedCommands, currentGuildCommands)) {
-                    this.logger.info(`Guild commands for ${guild.name} have changed, updating...`)
-                    await guild.commands.set(value).catch((e) => this.logger.error(e))
-                } else {
-                    this.logger.info(`Guild commands for ${guild.name} have not changed.`)
-                }
-            }
-        }
-    }
+				if (Util.deepEquals(sortedCommands, currentGuildCommands)) {
+					this.logger.info(
+						`Guild commands for ${guild.name} have changed, updating...`
+					)
+					await guild.commands.set(value).catch((e) => this.logger.error(e))
+				} else {
+					this.logger.info(`Guild commands for ${guild.name} have not changed.`)
+				}
+			}
+		}
+	}
 
-    protected async handleApplicationCommands(i) {
-        this.logger.debug(
-            `${i.guild.name} (${i.guild.id}) > ${i.member.user.username} (${i.member.user.id}) > /${i.commandName} (${i.commandId})`
-        )
-        try {
-            const file = this.commands[i.commandName]
-            if (!file) return
-            const cmd = await import(file)
-            await cmd.execute(i, this)
-        } catch (error) {
-            this.logger.error(error)
-            try {
-                await i.reply({
-                    content: 'There was an error while executing this command!',
-                    ephemeral: true
-                })
-            } catch (error) {
-                try {
-                    await i.editReply({
-                        content: 'There was an error while executing this command!'
-                    })
-                } catch (error) {
-                    this.logger.error(error)
-                }
-            }
-        }
-    }
+	protected async handleApplicationCommands(i) {
+		this.logger.debug(
+			`${i.guild.name} (${i.guild.id}) > ${i.member.user.username} (${i.member.user.id}) > /${i.commandName} (${i.commandId})`
+		)
+		try {
+			const file = this.commands[i.commandName]
+			if (!file) return
+			const cmd = await import(file)
+			await cmd.execute(i, this)
+		} catch (error) {
+			this.logger.error(error)
+			try {
+				await i.reply({
+					content: 'There was an error while executing this command!',
+					ephemeral: true
+				})
+			} catch (error) {
+				try {
+					await i.editReply({
+						content: 'There was an error while executing this command!'
+					})
+				} catch (error) {
+					this.logger.error(error)
+				}
+			}
+		}
+	}
 
-    protected async loadEvents() {
-        const eventFiles = fs.readdirSync(path.resolve(__dirname, this.eventsFolder))
+	protected async loadEvents() {
+		const eventFiles = fs.readdirSync(
+			path.resolve(__dirname, this.eventsFolder)
+		)
 
 		const filesToImport = []
 
 		async function importFolder(folder) {
-            const fsfolder = fs.readdirSync(path.resolve(__dirname, this.eventsFolder + '/' + folder))
+			const fsfolder = fs.readdirSync(
+				path.resolve(__dirname, this.eventsFolder + '/' + folder)
+			)
 			for (const file of fsfolder) {
 				if (file.endsWith('.js')) {
 					filesToImport.push(`${folder}/${file}`)
@@ -245,10 +258,10 @@ export default class BotClient extends Client {
 				}
 			})
 		}
-    }
+	}
 
-    protected async loadTask() {
-        const tasksFiles = fs
+	protected async loadTask() {
+		const tasksFiles = fs
 			.readdirSync(path.resolve(__dirname, this.taskFolder))
 			.filter((file) => file.endsWith('.js'))
 		for (const file of tasksFiles) {
@@ -256,5 +269,5 @@ export default class BotClient extends Client {
 				setInterval(() => task.execute(this), task.interval)
 			})
 		}
-    }
+	}
 }
