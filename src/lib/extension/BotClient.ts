@@ -81,7 +81,7 @@ export default class BotClient extends Client {
 
 		for (const file of filesToImport) {
 			await import(`${this.commandFolder}/${file}`).then((cmds) => {
-				this.commands[cmds.data.name] = `../../slashCommands/${file}`
+				this.commands[cmds.data.name] = `${this.commandFolder}/${file}`
 				if (cmds.guildIds) {
 					if (cmds.guildIds.lenght === 1) {
 						const guildId = cmds.guildIDs[0]
