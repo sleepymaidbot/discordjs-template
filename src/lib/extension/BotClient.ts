@@ -112,6 +112,7 @@ export default class BotClient extends Client {
 				// @ts-ignore - This is a workaround for a bug in the builder
 				options: cmd.options,
 				defaultPermission: cmd.defaultPermission,
+				// @ts-ignore - This is a workaround for a bug in the builder
 				type: cmd.type
 			}))
 			.sort((a, b) => {
@@ -125,6 +126,7 @@ export default class BotClient extends Client {
 				description: value1.description,
 				options: value1.options,
 				defaultPermission: value1.defaultPermission,
+				// @ts-ignore - This is a workaround for a bug in the builder
 				type: value1.type
 			}))
 			.sort((a, b) => {
@@ -157,6 +159,7 @@ export default class BotClient extends Client {
 						// @ts-ignore - This is a workaround for a bug in the builder
 						options: cmd.options,
 						defaultPermission: cmd.defaultPermission,
+						// @ts-ignore - This is a workaround for a bug in the builder
 						type: cmd.type
 					}))
 					.sort((a, b) => {
@@ -171,6 +174,7 @@ export default class BotClient extends Client {
 						description: v1.description,
 						options: v1.options,
 						defaultPermission: v1.defaultPermission,
+						// @ts-ignore - This is a workaround for a bug in the builder
 						type: v1.type
 					}))
 					.sort((a, b) => {
