@@ -54,16 +54,14 @@ export default class BotClient extends Client {
 
 		const filesToImport = []
 
-		async function importFolder(folder) {
-			const fsfolder = fs.readdirSync(
-				`${__dirname}/${this.commandFolder}/${folder}`
-			)
+		async function importFolder(folder, commandFolder) {
+			const fsfolder = fs.readdirSync(`${__dirname}/${commandFolder}/${folder}`)
 			for (const file of fsfolder) {
 				if (file.endsWith('.js')) {
 					filesToImport.push(`${folder}/${file}`)
 				} else if (file.endsWith('.disable')) return
 				else {
-					importFolder(`${folder}/${file}`)
+					importFolder(`${folder}/${file}`, this.commandFolder)
 				}
 			}
 		}
@@ -72,7 +70,7 @@ export default class BotClient extends Client {
 				filesToImport.push(file)
 			} else if (file.endsWith('.disable')) return
 			else {
-				importFolder(file)
+				importFolder(file, this.commandFolder)
 			}
 		}
 
@@ -228,16 +226,16 @@ export default class BotClient extends Client {
 
 		const filesToImport = []
 
-		async function importFolder(folder) {
+		async function importFolder(folder, eventsFolder) {
 			const fsfolder = fs.readdirSync(
-				path.resolve(__dirname, this.eventsFolder + '/' + folder)
+				path.resolve(__dirname, eventsFolder + '/' + folder)
 			)
 			for (const file of fsfolder) {
 				if (file.endsWith('.js')) {
 					filesToImport.push(`${folder}/${file}`)
 				} else if (file.endsWith('.disable')) return
 				else {
-					importFolder(`${folder}/${file}`)
+					importFolder(`${folder}/${file}`, this.eventsFolder)
 				}
 			}
 		}
@@ -246,7 +244,7 @@ export default class BotClient extends Client {
 				filesToImport.push(file)
 			} else if (file.endsWith('.disable')) return
 			else {
-				importFolder(file)
+				importFolder(file, this.eventsFolder)
 			}
 		}
 		for (const file of filesToImport) {
